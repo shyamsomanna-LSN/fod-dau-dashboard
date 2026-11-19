@@ -1,0 +1,431 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>QC DAU & FOD Monitor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#fff;--surface2:#eef0f5;--border:#e2e8f0;
+  --fg:#1a1f2e;--fg-m:#64748b;--fg-f:#94a3b8;
+  --acc:#6366f1;--acc-d:#ede9fe;
+  --grn:#16a34a;--grn-bg:#f0fdf4;--grn-cell:rgba(22,163,74,.12);
+  --red:#dc2626;--red-bg:#fef2f2;--red-cell:rgba(220,38,38,.11);
+  --r:10px;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,0,0,.1);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --fg:#e6edf3;--fg-m:#8b949e;--fg-f:#484f58;
+  --acc:#818cf8;--acc-d:#1e1b4b;
+  --grn:#3fb950;--grn-bg:#0d2a1a;--grn-cell:rgba(63,185,80,.13);
+  --red:#f85149;--red-bg:#2a0d0d;--red-cell:rgba(248,81,73,.13);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --fg:#e6edf3;--fg-m:#8b949e;--fg-f:#484f58;
+  --acc:#818cf8;--acc-d:#1e1b4b;
+  --grn:#3fb950;--grn-bg:#0d2a1a;--grn-cell:rgba(63,185,80,.13);
+  --red:#f85149;--red-bg:#2a0d0d;--red-cell:rgba(248,81,73,.13);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);font-size:13.5px;line-height:1.5;padding:16px}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--acc)}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+h1{font-size:17px;font-weight:800}
+.hdr p{font-size:11px;color:var(--fg-m)}
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--surface2);padding:4px;border-radius:10px;width:fit-content;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;color:var(--fg-m);background:transparent;transition:all .15s}
+.tab.active{background:var(--surface);color:var(--fg);box-shadow:var(--sh)}
+.sub-tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--surface2);padding:3px;border-radius:8px;width:fit-content}
+.sub-tab{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:var(--fg-m);background:transparent;transition:all .15s}
+.sub-tab.active{background:var(--surface);color:var(--fg);box-shadow:var(--sh)}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:var(--sh);cursor:pointer;transition:all .15s}
+.ccard:hover,.ccard.sel{border-color:var(--acc);box-shadow:var(--sh2)}
+.ccard.sel{background:var(--acc-d)}
+.ccard-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.ccard-dau{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.ccard-label{font-size:10px;color:var(--fg-m);margin-top:1px}
+.metrics-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.metric{flex:1;min-width:64px;background:var(--surface2);border-radius:6px;padding:5px 7px}
+.metric-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+.metric-val.red{color:var(--red)}.metric-val.grn{color:var(--grn)}
+.metric-label{font-size:9px;color:var(--fg-f);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.spark{margin-top:8px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);margin-bottom:16px;overflow:hidden}
+.chart-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chart-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--fg-m)}
+.legend{display:flex;gap:10px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--fg-m);cursor:pointer;transition:opacity .15s;user-select:none}
+.leg-item.dim{opacity:.3}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+svg.chart{width:100%;overflow:visible}
+.tooltip{position:fixed;background:var(--fg);color:var(--bg);padding:7px 11px;border-radius:7px;font-size:11px;pointer-events:none;display:none;z-index:999;white-space:nowrap;font-family:'JetBrains Mono',monospace;line-height:1.7;box-shadow:var(--sh2)}
+.chart-wrap{position:relative}
+.section-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--fg-m)}
+select.ctrl{font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--fg);cursor:pointer;font-family:inherit;outline:none}
+select.ctrl:focus{border-color:var(--acc)}
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow-x:auto;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;min-width:680px}
+thead th{background:var(--surface2);padding:7px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--fg-m);border-bottom:1px solid var(--border);white-space:nowrap;line-height:1.3}
+thead th.left{text-align:left}
+thead th.today-col{background:var(--acc-d);color:var(--acc)}
+tbody tr:hover{background:var(--bg)}
+tbody td{padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px;font-variant-numeric:tabular-nums;text-align:right;font-family:'JetBrains Mono',monospace}
+tbody td.left{text-align:left;font-family:'Inter',sans-serif;font-size:12.5px}
+td.cell-grn{background:var(--grn-cell);color:var(--grn);font-weight:600}
+td.cell-red{background:var(--red-cell);color:var(--red);font-weight:700}
+td.cell-neu{color:var(--fg-m)}
+td.today-col{font-weight:800}
+.flag{font-size:14px;margin-left:4px;vertical-align:middle}
+tfoot td{background:var(--surface2);font-weight:700;border-top:2px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:right}
+tfoot td.left{text-align:left;font-family:'Inter',sans-serif}
+.dip{color:var(--red);font-weight:700}
+.gain{color:var(--grn);font-weight:700}
+.neu-c{color:var(--fg-m)}
+.summary-cols td{border-bottom:1px solid var(--border);background:var(--surface)}
+@media(max-width:600px){.client-grid{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="logo">QC</div>
+    <div>
+      <h1>DAU &amp; FOD Monitor</h1>
+      <p>Client × City · Day-on-Day · 30 days to 12 Nov 2026</p>
+    </div>
+  </div>
+  <span style="font-size:10px;color:var(--fg-f);font-family:'JetBrains Mono',monospace">Data as of 16 Nov 2026</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="setView('client',this)">Client View</button>
+  <button class="tab" onclick="setView('cityDau',this)">City DAU</button>
+  <button class="tab" onclick="setView('cityOpd',this)">City OPD</button>
+  <button class="tab" onclick="setView('cityDetail',this)">City Detail</button>
+</div>
+
+<div id="clientView">
+  <div class="client-grid" id="clientCards"></div>
+  <div class="chart-wrap">
+    <div class="chart-card">
+      <div class="chart-hdr"><span class="chart-title">DAU Trend — Daily (30d)</span><div class="legend" id="dauLegend"></div></div>
+      <svg class="chart" id="dauChart" height="200"></svg>
+    </div>
+    <div class="tooltip" id="dauTip"></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-card">
+      <div class="chart-hdr"><span class="chart-title">FOD Trend — Daily (30d)</span><div class="legend" id="fodLegend"></div></div>
+      <svg class="chart" id="fodChart" height="130"></svg>
+    </div>
+    <div class="tooltip" id="fodTip"></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-card">
+      <div class="chart-hdr"><span class="chart-title">OPD Trend — Daily (30d)</span><div class="legend" id="opdLegend"></div></div>
+      <svg class="chart" id="opdChart" height="130"></svg>
+    </div>
+    <div class="tooltip" id="opdTip"></div>
+  </div>
+</div>
+
+<div id="cityDauView" hidden>
+  <div class="tbl-wrap"><table id="cityDauTable"></table></div>
+</div>
+
+<div id="cityOpdView" hidden>
+  <p style="font-size:11px;color:var(--fg-m);margin-bottom:10px">OPD is tracked at client level. Showing each client's last 7 days of OPD across all cities.</p>
+  <div class="tbl-wrap"><table id="cityOpdTable"></table></div>
+</div>
+
+<div id="cityDetailView" hidden>
+  <div class="section-bar">
+    <span class="section-label">City</span>
+    <select class="ctrl" id="citySel" onchange="onCityChange()"></select>
+    <span class="section-label">Client</span>
+    <select class="ctrl" id="cityClientSel" onchange="renderCityDetail()">
+      <option value="all">All Clients</option>
+    </select>
+  </div>
+  <div class="tbl-wrap"><table id="cityDetailTable"></table></div>
+  <div class="chart-wrap">
+    <div class="chart-card">
+      <div class="chart-hdr"><span class="chart-title" id="cityChartTitle">City DAU by Client</span><div class="legend" id="cityLegend"></div></div>
+      <svg class="chart" id="cityChart" height="200"></svg>
+    </div>
+    <div class="tooltip" id="cityTip"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {"dates":["2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25","2026-10-26","2026-10-27","2026-10-28","2026-10-29","2026-10-30","2026-10-31","2026-11-01","2026-11-02","2026-11-03","2026-11-04","2026-11-05","2026-11-06","2026-11-07","2026-11-08","2026-11-09","2026-11-10","2026-11-11","2026-11-12"],"clients":{"Zepto":{"dau":[1390,1359,1347,1442,1383,1305,1333,1293,1352,1349,1448,1384,1305,1352,1360,1393,1300,1377,1358,1248,1233,1186,1190,1266,1227,1165,881,932,927,989],"fod":[26,15,15,14,9,15,8,15,19,22,18,7,15,21,23,18,1,2,0,1,1,0,0,0,0,0,0,0,1,0],"opd":[33223,32275,33554,36563,37761,33242,35759,32192,30800,31028,33977,36035,30767,30733,32578,32799,31793,35626,36171,30141,30139,27968,29798,33317,34068,38665,24021,24148,24253,23724]},"Blinkit":{"dau":[806,757,806,830,850,776,768,697,720,758,799,777,742,748,816,801,740,808,779,779,797,779,769,814,829,797,551,611,617,644],"fod":[12,9,11,6,6,5,4,5,7,7,8,1,7,18,11,9,10,13,4,24,20,8,7,8,5,3,13,13,7,13],"opd":[16481,14668,16564,18019,19634,16145,16803,14646,14519,15776,17569,19156,15071,14953,17226,17458,15347,18207,19347,15229,16109,16703,17405,21545,21771,22145,13369,14994,15253,13555]},"FK Minutes":{"dau":[868,865,848,836,805,596,573,559,687,726,746,730,696,715,733,690,676,216,669,711,733,715,734,763,772,717,496,568,567,577],"fod":[2,3,2,0,1,0,0,3,9,8,4,3,9,8,7,7,7,0,7,2,12,15,2,4,1,1,9,5,8,7],"opd":[14080,15190,15851,14190,14711,11095,11081,10395,12137,11959,12228,13879,10712,11263,11972,12284,10742,3792,12975,11939,12156,12493,12972,14964,15265,15486,10700,12117,12241,10666]},"BB Now":{"dau":[464,457,454,457,446,440,423,390,431,430,446,440,420,402,414,428,431,490,488,474,471,448,471,487,477,456,397,412,379,384],"fod":[11,13,7,5,4,8,3,6,12,8,12,9,9,8,21,15,10,20,7,12,12,16,11,11,8,1,5,6,8,10],"opd":[8532,8696,8539,9394,10352,8453,9761,8438,7565,7817,9114,10765,7901,7216,8268,9267,10287,10423,12102,9473,8229,9130,9664,11830,10901,12323,8165,8602,8540,7998]},"Instamart":{"dau":[107,108,110,112,95,96,91,85,98,100,102,102,91,115,105,107,101,103,96,92,114,119,125,126,125,109,89,112,100,102],"fod":[9,9,4,5,0,5,5,4,1,6,5,4,5,10,5,7,4,5,3,0,16,7,8,5,1,5,2,8,4,4],"opd":[2483,2484,2628,2871,2596,2267,2401,2443,2291,2456,2699,2747,2012,2736,2632,2504,2212,2609,2670,2279,2908,3121,3022,3634,3371,3441,2443,3254,2474,2284]},"Frist Club":{"dau":[275,271,255,322,307,286,234,236,248,262,324,323,360,328,325,329,324,401,396,373,338,347,312,325,372,354,341,302,309,310],"fod":[0,11,2,34,5,5,4,5,7,8,30,4,23,8,6,14,10,31,3,15,9,5,0,4,3,0,7,9,2,8],"opd":[2324,2255,2083,2675,2617,2294,2318,2521,2482,2394,2946,3238,2732,2850,2811,2781,2569,3320,3590,2803,2874,2748,2576,2730,3182,2830,2594,2857,2655,2788]},"Country Delight":{"dau":[44,40,37,39,36,34,33,38,46,45,50,45,45,0,56,49,0,50,51,47,52,52,52,53,50,42,40,0,48,0],"fod":[4,1,2,0,0,2,0,5,3,5,6,1,6,0,7,1,0,4,2,1,4,0,0,0,1,0,0,0,3,0],"opd":[543,532,456,544,566,381,433,444,483,463,534,654,508,0,625,643,0,568,676,434,501,507,551,593,644,580,546,0,640,0]}}};
+
+const CC = {"Bengaluru":{"Zepto":{"dau":[433,405,418,467,430,435,431,419,416,432,450,418,389,410,440,452,412,425,443,375,379,356,361,402,391,387,279,313,294,307],"fod":[12,4,5,7,3,7,4,4,5,11,5,2,3,11,13,10,1,0,0,1,1,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[228,222,218,217,224,211,206,201,199,213,221,222,216,225,228,227,225,221,218,209,218,212,214,228,237,221,165,185,181,197],"fod":[5,5,2,0,2,2,2,2,1,3,1,0,2,7,3,4,0,4,1,8,8,3,2,3,3,1,7,4,2,5]},"FK Minutes":{"dau":[24,23,24,23,22,22,21,18,20,16,20,17,16,15,16,16,14,13,16,14,16,14,13,13,15,14,13,16,13,14],"fod":[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0]},"BB Now":{"dau":[93,95,92,100,81,76,80,75,78,79,82,83,79,77,86,82,87,88,96,91,87,84,87,92,91,90,87,82,77,80],"fod":[0,4,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,2,2,2,0,1,1,2,0,0,0,0,1,1]},"Instamart":{"dau":[103,101,103,107,91,94,88,80,92,96,98,98,86,111,99,99,94,96,92,89,111,112,117,118,118,101,84,104,91,92],"fod":[9,7,2,5,0,5,5,4,0,6,4,4,5,10,4,5,4,5,2,0,16,7,7,5,1,3,2,8,4,2]},"Frist Club":{"dau":[98,90,86,109,103,105,88,82,86,92,93,94,105,95,95,94,95,100,98,100,90,89,77,83,91,90,89,77,78,82],"fod":[0,0,0,13,2,5,2,2,4,1,1,0,6,2,1,3,2,2,0,6,4,1,0,1,1,0,2,1,1,4]},"Country Delight":{"dau":[1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"Mumbai":{"Zepto":{"dau":[327,341,331,347,350,306,339,335,363,338,375,357,342,336,356,353,346,355,346,334,303,302,292,314,309,301,232,232,246,254],"fod":[9,9,6,4,2,4,4,10,12,9,4,3,7,3,7,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[86,89,85,86,92,92,85,83,84,85,89,81,82,87,84,86,90,89,78,92,81,80,80,80,78,85,66,73,73,80],"fod":[0,1,1,0,0,1,0,0,0,0,1,0,2,2,0,2,5,0,0,4,2,2,1,0,0,1,2,2,1,1]},"FK Minutes":{"dau":[83,74,69,71,68,77,70,75,85,82,79,83,76,71,77,77,81,35,80,80,77,62,70,74,78,76,74,63,69,65],"fod":[0,0,0,0,0,0,0,1,2,0,0,0,2,0,1,0,3,0,4,1,2,1,0,1,1,0,2,1,2,1]},"Instamart":{"dau":[2,2,2,1,1,1,2,1,2,1,1,2,1,1,1,1,2,1,1,1,1,2,3,2,2,2,2,3,2,1],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]}},"Hyderabad":{"Zepto":{"dau":[94,92,90,94,89,74,68,66,75,65,81,87,73,83,79,78,74,85,83,80,76,76,79,84,74,80,61,69,69,74],"fod":[1,0,1,0,0,0,0,0,0,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[42,41,38,44,41,43,35,32,36,34,40,36,38,38,39,38,36,36,37,25,25,28,23,27,28,30,22,27,27,29],"fod":[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,2,1,0,2,2,4,2]},"Instamart":{"dau":[1,3,3,2,2,1,1,2,3,2,2,1,2,1,2,5,4,4,2,1,2,3,4,5,4,5,1,3,6,7],"fod":[0,2,2,0,0,0,0,0,1,0,1,0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,1]},"Frist Club":{"dau":[177,181,169,213,204,181,146,154,162,170,231,229,255,233,230,235,229,301,298,273,248,258,235,242,281,264,252,225,231,228],"fod":[0,11,2,21,3,0,2,3,3,7,29,4,17,6,5,11,8,29,3,9,5,4,0,3,2,0,5,8,1,4]}},"Kolkata":{"Zepto":{"dau":[50,43,42,45,44,34,34,35,30,44,43,41,39,46,38,40,44,46,39,31,34,36,38,49,47,38,25,23,27,30],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[6,7,6,6,6,6,5,3,3,2,2,3,5,6,5,4,5,4,3,4,3,3,3,6,4,5,3,3,2,3],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"FK Minutes":{"dau":[251,262,259,242,240,151,143,140,171,189,206,195,196,201,215,209,218,76,223,213,215,215,224,241,242,234,162,187,183,173],"fod":[1,0,0,0,0,0,0,0,1,0,1,0,1,1,3,1,0,0,0,0,3,6,0,2,0,0,4,1,1,2]}},"Delhi":{"Zepto":{"dau":[111,111,106,105,108,113,107,101,113,110,122,116,111,117,107,109,94,112,110,106,108,100,101,105,96,95,64,69,79,79],"fod":[2,1,3,0,2,2,0,0,1,2,5,2,2,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]},"Blinkit":{"dau":[94,96,97,113,103,98,98,85,95,103,108,105,92,96,100,98,76,101,102,105,113,101,101,102,110,101,61,67,68,75],"fod":[1,0,0,1,1,1,0,3,1,0,1,0,0,2,0,0,0,4,0,3,2,0,0,1,1,0,0,1,0,1]},"Instamart":{"dau":[1,1,1,1,0,0,0,1,1,1,1,1,1,1,2,2,1,2,1,1,0,1,1,1,1,1,0,1,1,1],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"Noida":{"Zepto":{"dau":[44,43,42,47,42,42,46,40,46,43,44,39,37,45,44,46,37,42,40,39,40,38,43,44,37,37,29,28,26,31],"fod":[0,1,0,1,0,0,0,0,0,0,0,0,2,2,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[43,36,42,40,47,45,50,49,43,41,41,47,36,34,43,32,29,40,42,43,46,45,40,42,44,28,16,27,26,25],"fod":[1,0,1,2,1,0,0,0,2,0,0,0,0,0,0,0,1,1,0,2,0,0,0,0,0,0,0,1,0,0]},"BB Now":{"dau":[104,97,100,104,106,109,104,82,98,96,94,95,83,71,77,83,72,94,92,90,85,84,88,96,97,90,72,75,72,71],"fod":[5,2,1,2,0,3,2,0,5,1,2,4,1,4,2,3,1,3,3,0,3,4,2,3,3,0,0,3,3,2]},"Country Delight":{"dau":[15,12,12,13,11,11,10,13,17,15,16,16,14,0,20,17,0,18,18,15,17,20,16,17,11,11,11,0,15,0],"fod":[1,1,0,0,0,0,0,5,2,1,0,0,2,0,3,0,0,0,1,1,1,0,0,0,0,0,0,0,3,0]}},"Jammu":{"Zepto":{"dau":[0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"fod":[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[147,134,169,150,166,128,131,111,114,121,115,114,124,98,138,150,131,154,140,156,154,155,151,149,152,170,103,102,116,106],"fod":[1,1,3,0,1,1,1,0,1,1,2,0,1,1,2,0,0,1,2,2,0,1,1,0,0,0,0,0,0,1]}},"Kanpur":{"Zepto":{"dau":[5,5,4,3,5,5,4,5,5,5,5,4,4,5,5,5,4,5,4,5,5,5,5,5,5,5,5,5,5,4],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[0,0,0,0,0,0,0,0,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"FK Minutes":{"dau":[106,90,93,99,98,85,86,77,93,83,88,90,74,86,81,81,67,20,79,81,79,79,82,85,85,74,34,51,51,54],"fod":[0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0]}},"Lucknow":{"Zepto":{"dau":[45,42,39,44,41,42,43,41,38,43,45,41,40,42,38,40,29,32,36,38,40,34,38,40,43,36,26,34,26,32],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"FK Minutes":{"dau":[60,71,62,66,66,52,53,45,54,58,67,67,61,50,60,56,34,15,0,57,57,58,58,64,66,55,34,35,29,35],"fod":[0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0]}},"Pune":{"Zepto":{"dau":[42,41,42,45,43,35,39,44,41,46,43,44,38,40,35,40,44,42,37,33,33,35,35,31,27,22,16,19,19,17],"fod":[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]},"Blinkit":{"dau":[25,25,28,29,31,24,28,25,18,25,28,25,21,28,33,30,27,26,30,25,31,23,25,27,27,26,20,20,26,18],"fod":[1,1,2,0,0,0,0,0,0,0,2,1,0,1,4,1,1,0,0,0,3,1,0,0,0,0,0,0,0,1]},"FK Minutes":{"dau":[21,19,19,19,21,16,15,15,13,15,17,15,13,16,16,17,16,4,12,15,18,17,19,17,15,14,12,16,15,17],"fod":[0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,0,0,3,1,1,0,0,0,1,0,1,1]}},"Guwahati":{"Blinkit":{"dau":[19,22,22,23,23,9,15,12,15,21,24,25,20,21,19,29,27,27,25,18,19,23,22,28,30,26,16,18,13,18],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0]},"FK Minutes":{"dau":[17,13,14,13,14,9,9,9,12,15,8,11,10,9,11,12,12,2,11,13,9,11,10,9,10,10,6,5,6,6],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}},"Patna":{"Blinkit":{"dau":[3,1,2,3,0,0,0,0,2,1,1,1,1,2,1,1,1,3,1,2,4,2,3,3,3,2,1,2,1,1],"fod":[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"FK Minutes":{"dau":[87,88,88,80,74,28,40,45,53,67,72,69,67,71,67,54,58,29,67,69,72,61,65,62,61,58,37,51,54,53],"fod":[0,0,0,0,0,0,0,0,0,1,1,0,0,2,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]}},"Jaipur":{"Zepto":{"dau":[15,16,16,16,15,13,15,13,12,10,12,15,12,16,14,15,15,14,15,13,13,13,12,13,11,12,10,9,8,10],"fod":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}}};
+
+const CLIENT_COLORS = {'Zepto':'#6366f1','Blinkit':'#f59e0b','FK Minutes':'#10b981','BB Now':'#ef4444','Instamart':'#8b5cf6','Frist Club':'#0ea5e9','Country Delight':'#ec4899'};
+const CITY_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#0ea5e9','#8b5cf6','#ec4899','#14b8a6'];
+const clients = Object.keys(DATA.clients);
+const dates = DATA.dates;
+const n = dates.length;
+let activeClients = new Set(clients);
+let currentView = 'client';
+
+const avg7 = (arr, offset=0) => { const sl=arr.slice(-7-offset, offset?-offset:undefined); return sl.length?sl.reduce((a,b)=>a+b,0)/sl.length:0; };
+const sum7 = (arr, offset=0) => { const sl=arr.slice(-7-offset, offset?-offset:undefined); return sl.reduce((a,b)=>a+b,0); };
+const fmt = v => v==null?'—':Math.round(v).toLocaleString();
+
+function cityTotalArr(city, metric) {
+  const cd = CC[city]||{};
+  const out = Array(n).fill(0);
+  Object.values(cd).forEach(cl => { (cl[metric]||[]).forEach((v,i)=>{ if(i<n) out[i]+=v; }); });
+  return out;
+}
+
+function dropFlag(arr) {
+  let streak=0;
+  for(let i=arr.length-1;i>0;i--){ if(arr[i]<arr[i-1]) streak++; else break; }
+  return streak;
+}
+
+function buildCityHeatTable(metric) {
+  const last8 = dates.slice(-8);
+  const last7 = dates.slice(-7);
+  const cities = Object.keys(CC);
+  let html = `<thead><tr><th class="left">City</th>`;
+  last7.forEach((d,i) => {
+    const isToday = i===6;
+    const label = d.slice(5);
+    const dayName = new Date(d).toLocaleDateString('en-US',{weekday:'short'});
+    html += `<th class="${isToday?'today-col':''}">${dayName}<br>${label}</th>`;
+  });
+  html += `<th>Avg<br>this wk</th><th>Avg<br>prev wk</th><th>WoW%</th><th>Trend</th></tr></thead><tbody>`;
+  const rows = cities.map(city => {
+    const arr = cityTotalArr(city, metric);
+    const last8vals = arr.slice(-8);
+    const last7vals = arr.slice(-7);
+    const avgNow = avg7(arr);
+    const avgPrev = avg7(arr,7);
+    const wow = avgPrev?(avgNow-avgPrev)/avgPrev*100:0;
+    const streak = dropFlag(last7vals);
+    let cells = '';
+    last7vals.forEach((v,i) => {
+      const prev = i===0 ? last8vals[0] : last7vals[i-1];
+      const isToday = i===6;
+      let cls = v===0?'cell-neu':v>=prev?'cell-grn':'cell-red';
+      cells += `<td class="${cls}${isToday?' today-col':''}">${fmt(v)}</td>`;
+    });
+    const wowCls = wow<0?'dip':'gain';
+    const flagStr = streak>=3?`<span class="flag" title="${streak} consecutive drops">🚩</span>`:streak>=2?`<span class="flag" title="2 consecutive drops" style="opacity:.5">⚠️</span>`:'';
+    return `<tr><td class="left"><strong>${city}</strong>${flagStr}</td>${cells}<td class="${avgNow<avgPrev?'dip':'gain'}">${fmt(avgNow)}</td><td>${fmt(avgPrev)}</td><td class="${wowCls}">${wow>=0?'+':''}${wow.toFixed(1)}%</td><td>${sparkMini(last7vals)}</td></tr>`;
+  });
+  const totalLast8 = Array(8).fill(0), totalLast7 = Array(7).fill(0);
+  let totalAvgNow=0, totalAvgPrev=0;
+  cities.forEach(city => {
+    const arr = cityTotalArr(city, metric);
+    arr.slice(-8).forEach((v,i)=>totalLast8[i]+=v);
+    arr.slice(-7).forEach((v,i)=>totalLast7[i]+=v);
+    totalAvgNow += avg7(arr); totalAvgPrev += avg7(arr,7);
+  });
+  const totalWow = totalAvgPrev?(totalAvgNow-totalAvgPrev)/totalAvgPrev*100:0;
+  let totalCells='';
+  totalLast7.forEach((v,i)=>{
+    const prev=i===0?totalLast8[0]:totalLast7[i-1];
+    const isToday=i===6;
+    const cls=v>=prev?'cell-grn':'cell-red';
+    totalCells+=`<td class="${cls}${isToday?' today-col':''}">${fmt(v)}</td>`;
+  });
+  const tfoot=`<tfoot><tr><td class="left">All Cities (Total)</td>${totalCells}<td class="${totalAvgNow<totalAvgPrev?'dip':'gain'}">${fmt(totalAvgNow)}</td><td>${fmt(totalAvgPrev)}</td><td class="${totalWow<0?'dip':'gain'}">${totalWow>=0?'+':''}${totalWow.toFixed(1)}%</td><td></td></tr></tfoot>`;
+  return html + rows.join('') + '</tbody>' + tfoot;
+}
+
+function buildClientOpdTable() {
+  const last8 = dates.slice(-8);
+  const last7 = dates.slice(-7);
+  let html = `<thead><tr><th class="left">Client</th>`;
+  last7.forEach((d,i) => {
+    const isToday=i===6;
+    const dayName=new Date(d).toLocaleDateString('en-US',{weekday:'short'});
+    html+=`<th class="${isToday?'today-col':''}">${dayName}<br>${d.slice(5)}</th>`;
+  });
+  html+=`<th>Avg this wk</th><th>Avg prev wk</th><th>WoW%</th><th>Trend</th></tr></thead><tbody>`;
+  const rows = clients.map(c => {
+    const arr = DATA.clients[c].opd||[];
+    const last8vals = arr.slice(-8);
+    const last7vals = arr.slice(-7);
+    const avgNow=avg7(arr), avgPrev=avg7(arr,7);
+    const wow=avgPrev?(avgNow-avgPrev)/avgPrev*100:0;
+    const streak=dropFlag(last7vals);
+    let cells='';
+    last7vals.forEach((v,i) => {
+      const prev=i===0?last8vals[0]:last7vals[i-1];
+      const isToday=i===6;
+      const cls=v>=prev?'cell-grn':'cell-red';
+      cells+=`<td class="${cls}${isToday?' today-col':''}">${fmt(v)}</td>`;
+    });
+    const wowCls=wow<0?'dip':'gain';
+    const flagStr=streak>=3?`<span class="flag">🚩</span>`:streak>=2?`<span class="flag" style="opacity:.5">⚠️</span>`:'';
+    return `<tr><td class="left"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${CLIENT_COLORS[c]||'#888'};margin-right:6px;vertical-align:middle"></span><strong>${c}</strong>${flagStr}</td>${cells}<td class="${avgNow<avgPrev?'dip':'gain'}">${fmt(avgNow)}</td><td>${fmt(avgPrev)}</td><td class="${wowCls}">${wow>=0?'+':''}${wow.toFixed(1)}%</td><td>${sparkMini(last7vals)}</td></tr>`;
+  });
+  const totLast8=Array(8).fill(0), totLast7=Array(7).fill(0);
+  let totAvgNow=0, totAvgPrev=0;
+  clients.forEach(c=>{
+    const arr=DATA.clients[c].opd||[];
+    arr.slice(-8).forEach((v,i)=>totLast8[i]+=v);
+    arr.slice(-7).forEach((v,i)=>totLast7[i]+=v);
+    totAvgNow+=avg7(arr); totAvgPrev+=avg7(arr,7);
+  });
+  const totWow=totAvgPrev?(totAvgNow-totAvgPrev)/totAvgPrev*100:0;
+  let totCells='';
+  totLast7.forEach((v,i)=>{
+    const prev=i===0?totLast8[0]:totLast7[i-1];
+    const isToday=i===6;
+    const cls=v>=prev?'cell-grn':'cell-red';
+    totCells+=`<td class="${cls}${isToday?' today-col':''}">${fmt(v)}</td>`;
+  });
+  return html+rows.join('')+`</tbody><tfoot><tr><td class="left">All Clients (Total)</td>${totCells}<td class="${totAvgNow<totAvgPrev?'dip':'gain'}">${fmt(totAvgNow)}</td><td>${fmt(totAvgPrev)}</td><td class="${totWow<0?'dip':'gain'}">${totWow>=0?'+':''}${totWow.toFixed(1)}%</td><td></td></tr></tfoot>`;
+}
+
+function sparkMini(vals) {
+  const w=72,h=20,p=1,mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>`${p+i*(w-p*2)/(vals.length-1)},${h-p-(v-mn)/rng*(h-p*2)}`).join(' ');
+  const last=pts.split(' ').pop().split(',');
+  const trend=vals[vals.length-1]>=vals[0];
+  const col=trend?'var(--grn)':'var(--red)';
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="vertical-align:middle"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${col}"/></svg>`;
+}
+
+function spark(vals, color) {
+  const w=160,h=28,p=2,mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>`${p+i*(w-p*2)/(vals.length-1)},${h-p-(v-mn)/rng*(h-p*2)}`).join(' ');
+  const lp=pts.split(' ').pop().split(',');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polygon points="${p},${h} ${pts} ${w-p},${h}" fill="${color}" opacity=".12"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="${lp[0]}" cy="${lp[1]}" r="2.5" fill="${color}"/></svg>`;
+}
+
+function renderClientCards() {
+  document.getElementById('clientCards').innerHTML = clients.map(c => {
+    const dau=DATA.clients[c].dau,fod=DATA.clients[c].fod,opd=DATA.clients[c].opd;
+    const today=dau[n-1],yday=dau[n-2],dod=today-yday;
+    const avgNow=avg7(dau),avgPrev=avg7(dau,7);
+    const fod7=sum7(fod),fodPrev=sum7(fod,7);
+    const opd7=sum7(opd);
+    const wow=avgPrev?(avgNow-avgPrev)/avgPrev*100:0;
+    const col=CLIENT_COLORS[c];
+    const sel=activeClients.has(c)?' sel':'';
+    return `<div class="ccard${sel}" onclick="toggleClient('${c}')"><div class="ccard-name" style="color:${col}">${c}</div><div class="ccard-dau" style="color:${col}">${fmt(today)}</div><div class="ccard-label">DAU today &nbsp;·&nbsp; <span class="${dod<0?'dip':'gain'}">${dod>0?'+':''}${dod}</span> vs yesterday</div><div class="metrics-row"><div class="metric"><div class="metric-val ${wow<0?'red':'grn'}">${wow>=0?'+':''}${wow.toFixed(1)}%</div><div class="metric-label">WoW avg</div></div><div class="metric"><div class="metric-val">${fmt(avgNow)}</div><div class="metric-label">Avg DAU this wk</div></div><div class="metric"><div class="metric-val ${avgNow<avgPrev?'red':''}">${fmt(avgPrev)}</div><div class="metric-label">Avg DAU prev wk</div></div></div><div class="metrics-row"><div class="metric"><div class="metric-val ${fod7>fodPrev?'red':''}">${fod7}</div><div class="metric-label">FOD this wk</div></div><div class="metric"><div class="metric-val">${fodPrev}</div><div class="metric-label">FOD prev wk</div></div><div class="metric"><div class="metric-val">${fmt(opd7)}</div><div class="metric-label">OPD 7d total</div></div></div><div class="spark">${spark(dau.slice(-14),col)}</div></div>`;
+  }).join('');
+}
+
+function toggleClient(name) {
+  if(activeClients.has(name)){if(activeClients.size>1)activeClients.delete(name);}
+  else activeClients.add(name);
+  document.querySelectorAll('.ccard').forEach((c,i)=>c.classList.toggle('sel',activeClients.has(clients[i])));
+  ['dau','fod','opd'].forEach(m=>renderLineChart(m+'Chart',m+'Tip',m+'Legend',m));
+}
+
+function renderLineChart(svgId,tipId,legId,metric) {
+  const el=document.getElementById(svgId);if(!el)return;
+  const tip=document.getElementById(tipId),legEl=document.getElementById(legId);
+  const W=el.parentElement.clientWidth-32,H=parseInt(el.getAttribute('height'));
+  const L=50,R=12,T=8,B=26,cw=W-L-R,ch=H-T-B;
+  const actCl=clients.filter(c=>activeClients.has(c));
+  let mn=Infinity,mx=-Infinity;
+  actCl.forEach(c=>{const a=DATA.clients[c][metric]||[];mn=Math.min(mn,...a);mx=Math.max(mx,...a);});
+  if(!isFinite(mn)){mn=0;mx=10;}
+  const rng=mx-mn||1;
+  const xOf=i=>L+i*cw/(n-1),yOf=v=>T+ch-(v-mn)/rng*ch;
+  let h='';
+  for(let t=0;t<=4;t++){const v=mn+rng*t/4,y=yOf(v);h+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${L-4}" y="${y+3.5}" text-anchor="end" font-size="9" fill="var(--fg-f)" font-family="JetBrains Mono">${Math.round(v).toLocaleString()}</text>`;}
+  dates.forEach((d,i)=>{if(i%5===0||i===n-1)h+=`<text x="${xOf(i)}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--fg-f)">${d.slice(5)}</text>`;});
+  actCl.forEach(c=>{
+    const arr=DATA.clients[c][metric]||[],col=CLIENT_COLORS[c];
+    h+=`<polyline points="${arr.map((v,i)=>`${xOf(i)},${yOf(v)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
+    h+=`<circle cx="${xOf(n-1)}" cy="${yOf(arr[n-1])}" r="3" fill="${col}"/>`;
+    arr.forEach((v,i)=>h+=`<rect x="${xOf(i)-6}" y="${yOf(v)-6}" width="12" height="12" fill="transparent" data-c="${c}" data-i="${i}" data-v="${v}" class="hp"/>`);
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.hp').forEach(r=>{
+    r.addEventListener('mouseenter',e=>{tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';tip.innerHTML=`${dates[+r.dataset.i]}<br>${r.dataset.c}: <b>${(+r.dataset.v).toLocaleString()}</b>`;});
+    r.addEventListener('mouseleave',()=>tip.style.display='none');
+  });
+  legEl.innerHTML=clients.map(c=>`<span class="leg-item${activeClients.has(c)?'':' dim'}" onclick="toggleClient('${c}')"><span class="leg-dot" style="background:${CLIENT_COLORS[c]}"></span>${c}</span>`).join('');
+}
+
+function initCityDropdown() {
+  document.getElementById('citySel').innerHTML=Object.keys(CC).map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function onCityChange() {
+  const city=document.getElementById('citySel').value,cd=CC[city]||{};
+  document.getElementById('cityClientSel').innerHTML='<option value="all">All Clients</option>'+Object.keys(cd).map(c=>`<option value="${c}">${c}</option>`).join('');
+  renderCityDetail();
+}
+
+function renderCityDetail() {
+  const city=document.getElementById('citySel').value;
+  const cf=document.getElementById('cityClientSel').value;
+  const cd=CC[city]||{};
+  const filtered=cf==='all'?Object.keys(cd):Object.keys(cd).filter(c=>c===cf);
+  const maxAvg=Math.max(...filtered.map(c=>avg7(cd[c].dau)));
+  const rows=filtered.map(c=>{
+    const dau=cd[c].dau,fod=cd[c].fod;
+    const today=dau[n-1],yday=dau[n-2],dod=today-yday;
+    const avgNow=avg7(dau),avgPrev=avg7(dau,7);
+    const wow=avgPrev?(avgNow-avgPrev)/avgPrev*100:0;
+    const fod7=sum7(fod),fodPrev=sum7(fod,7),fodChg=fod7-fodPrev;
+    const col=CLIENT_COLORS[c]||'#6366f1';
+    const bw=Math.round(avgNow/maxAvg*80);
+    return `<tr><td class="left"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:6px;vertical-align:middle"></span><strong>${c}</strong><span style="display:inline-block;width:${bw}px;height:5px;border-radius:2px;background:var(--acc);opacity:.2;margin-left:8px;vertical-align:middle"></span></td><td class="r mono">${fmt(today)}</td><td class="r mono">${fmt(yday)}</td><td class="r ${dod<0?'dip':dod>0?'gain':'neu-c'}">${dod>0?'+':''}${dod}</td><td class="r mono">${fmt(avgNow)}</td><td class="r mono ${avgNow<avgPrev?'dip':''}">${fmt(avgPrev)}</td><td class="r ${wow<0?'dip':'gain'}">${wow>=0?'+':''}${wow.toFixed(1)}%</td><td class="r mono ${fod7>fodPrev?'dip':''}">${fod7}</td><td class="r mono">${fodPrev}</td><td class="r ${fodChg>0?'dip':fodChg<0?'gain':'neu-c'}">${fodChg>0?'▲ +':fodChg<0?'▼ ':''}${fodChg}</td></tr>`;
+  });
+  document.getElementById('cityDetailTable').innerHTML=`<thead><tr><th class="left">Client</th><th class="r">Today</th><th class="r">Yday</th><th class="r">DoD</th><th class="r">Avg DAU<br>this wk</th><th class="r">Avg DAU<br>prev wk</th><th class="r">WoW%</th><th class="r">FOD<br>this wk</th><th class="r">FOD<br>prev wk</th><th class="r">FOD Δ</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+  document.getElementById('cityChartTitle').textContent=`${city} — DAU Trend`;
+  const svg=document.getElementById('cityChart'),tip=document.getElementById('cityTip'),leg=document.getElementById('cityLegend');
+  const W=svg.parentElement.clientWidth-32,H=parseInt(svg.getAttribute('height'));
+  const L=50,R=12,T=8,B=26,cw=W-L-R,ch=H-T-B;
+  let mn=Infinity,mx=-Infinity;
+  filtered.forEach(c=>{const a=cd[c].dau;mn=Math.min(mn,...a);mx=Math.max(mx,...a);});
+  if(!isFinite(mn)){mn=0;mx=10;}
+  const rng=mx-mn||1,xOf=i=>L+i*cw/(n-1),yOf=v=>T+ch-(v-mn)/rng*ch;
+  let h='';
+  for(let t=0;t<=4;t++){const v=mn+rng*t/4,y=yOf(v);h+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${L-4}" y="${y+3.5}" text-anchor="end" font-size="9" fill="var(--fg-f)" font-family="JetBrains Mono">${Math.round(v).toLocaleString()}</text>`;}
+  dates.forEach((d,i)=>{if(i%5===0||i===n-1)h+=`<text x="${xOf(i)}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--fg-f)">${d.slice(5)}</text>`;});
+  filtered.forEach((c,ci)=>{
+    const arr=cd[c].dau,col=CLIENT_COLORS[c]||CITY_COLORS[ci];
+    h+=`<polyline points="${arr.map((v,i)=>`${xOf(i)},${yOf(v)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+    h+=`<circle cx="${xOf(n-1)}" cy="${yOf(arr[n-1])}" r="3" fill="${col}"/>`;
+    arr.forEach((v,i)=>h+=`<rect x="${xOf(i)-6}" y="${yOf(v)-6}" width="12" height="12" fill="transparent" data-c="${c}" data-i="${i}" data-v="${v}" class="chp"/>`);
+  });
+  svg.innerHTML=h;
+  svg.querySelectorAll('.chp').forEach(r=>{
+    r.addEventListener('mouseenter',e=>{tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';tip.innerHTML=`${dates[+r.dataset.i]}<br>${r.dataset.c}: <b>${(+r.dataset.v).toLocaleString()}</b>`;});
+    r.addEventListener('mouseleave',()=>tip.style.display='none');
+  });
+  leg.innerHTML=filtered.map(c=>`<span class="leg-item"><span class="leg-dot" style="background:${CLIENT_COLORS[c]||'#888'}"></span>${c}</span>`).join('');
+}
+
+function setView(v,btn) {
+  currentView=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('clientView').hidden=v!=='client';
+  document.getElementById('cityDauView').hidden=v!=='cityDau';
+  document.getElementById('cityOpdView').hidden=v!=='cityOpd';
+  document.getElementById('cityDetailView').hidden=v!=='cityDetail';
+  if(v==='cityDau') document.getElementById('cityDauTable').innerHTML=buildCityHeatTable('dau');
+  if(v==='cityOpd') document.getElementById('cityOpdTable').innerHTML=buildClientOpdTable();
+  if(v==='cityDetail') renderCityDetail();
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  renderClientCards();
+  initCityDropdown();
+  setTimeout(()=>['dau','fod','opd'].forEach(m=>renderLineChart(m+'Chart',m+'Tip',m+'Legend',m)),50);
+});
+window.addEventListener('resize',()=>{
+  if(currentView==='client') ['dau','fod','opd'].forEach(m=>renderLineChart(m+'Chart',m+'Tip',m+'Legend',m));
+  else if(currentView==='cityDetail') renderCityDetail();
+});
+</script>
+</body></html>
